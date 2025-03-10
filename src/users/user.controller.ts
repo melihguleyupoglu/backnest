@@ -4,5 +4,5 @@ import { User } from './user.model';
 @Controller('/register')
 export class UserController {
   @Post()
-  async createUser(user: User): Promise<User> {}
+  async createUser(user: User): Promise<void> {}
 }
