@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from 'src/dto/createUserDto';
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,16 @@ export class UserService {
         name: user.name,
       },
     });
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      return await bcrypt.hash(password, salt);
+    } catch (err) {
+      console.error(err);
+      return '';
+    }
   }
 
   removeUser(email: string) {}
