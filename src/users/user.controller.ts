@@ -9,7 +9,6 @@ export class UserController {
   async handleUserCreation(
     @Body(new ValidationPipe({ whitelist: true })) user: CreateUserDto,
   ): Promise<void> {
-    console.log(JSON.stringify(user, null, 2));
     await this.userService.createUser(user);
   }
 }
