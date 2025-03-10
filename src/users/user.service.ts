@@ -33,7 +33,7 @@ export class UserService {
 
   updateUser(email: string) {}
 
-  async listUsers(): Promise<CreateUserDto[]> {
-    return await prisma.user.findMany();
+  async listUsers() {
+    console.log(await prisma.user.findMany());
   }
 }
