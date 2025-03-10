@@ -29,9 +29,11 @@ export class UserService {
     }
   }
 
-  removeUser(email: string) {}
+  async removeUser(email: string) {}
 
   updateUser(email: string) {}
 
-  listUsers() {}
+  async listUsers(): Promise<CreateUserDto[]> {
+    return await prisma.user.findMany();
+  }
 }
