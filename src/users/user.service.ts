@@ -9,6 +9,7 @@ const prisma = new PrismaClient();
 @Injectable()
 export class UserService {
   async createUser(user: CreateUserDto) {
+    user.password = await this.hashPassword(user.password);
     const newUser = await prisma.user.create({
       data: {
         email: user.email,
