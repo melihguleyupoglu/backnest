@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from 'src/dto/createUserDto';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -29,7 +33,7 @@ export class UserService {
     }
   }
 
-  async removeUser(email: string): Promise<string> {
+  async removeUser(email: string): Promise<string | undefined> {
     try {
       const deleteUser = await prisma.user.delete({
         where: {
@@ -38,7 +42,13 @@ export class UserService {
       });
       return deleteUser.email;
     } catch (err) {
-      return `An error occured: ${err}`;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (err.code === 'P2025') {
+        throw new NotFoundException(`User with ${email} not found.`);
+      }
+      throw new InternalServerErrorException(
+        'An error occurred while deleting the user.',
+      );
     }
   }
 
