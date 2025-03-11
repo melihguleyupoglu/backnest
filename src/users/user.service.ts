@@ -29,7 +29,17 @@ export class UserService {
     }
   }
 
-  async removeUser(email: string) {}
+  async removeUser(email: string) {
+    try {
+      const deleteUser = await prisma.user.delete({
+        where: {
+          email: email,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   updateUser(email: string) {}
 
