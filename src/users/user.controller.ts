@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  ValidationPipe,
+  Param,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from 'src/dto/createUserDto';
 
@@ -14,5 +23,16 @@ export class UserController {
   @Get('/list')
   async handleUserListing() {
     console.log(await this.userService.listUsers());
+  }
+  @Delete('/delete/:email')
+  async handleUserRemoval(@Param() params: { email: string }): Promise<object> {
+    const deletedUser = await this.userService.removeUser(params.email);
+    if (!deletedUser) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      message: `User deleted successfully: ${deletedUser}`,
+      timestamp: new Date().toISOString(),
+    };
   }
 }

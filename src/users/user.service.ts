@@ -29,15 +29,16 @@ export class UserService {
     }
   }
 
-  async removeUser(email: string) {
+  async removeUser(email: string): Promise<string> {
     try {
       const deleteUser = await prisma.user.delete({
         where: {
           email: email,
         },
       });
+      return deleteUser.email;
     } catch (err) {
-      console.error(err);
+      return `An error occured: ${err}`;
     }
   }
 
