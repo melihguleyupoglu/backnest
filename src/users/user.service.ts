@@ -7,6 +7,7 @@ import {
 import { CreateUserDto } from 'src/dto/createUserDto';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from 'src/dto/updateUserDto';
 
 const prisma = new PrismaClient();
 
@@ -52,7 +53,26 @@ export class UserService {
     }
   }
 
-  updateUser(email: string) {}
+  async updateUser(
+    email: string,
+    user: UpdateUserDto,
+  ): Promise<string | undefined> {
+    try {
+      const updateUser = await prisma.user.update({
+        where: {
+          email: email,
+        },
+        data: {
+          name: user.name,
+          password: user.password,
+        },
+      });
+      return updateUser.email;
+    } catch (err) {
+      console.error(err);
+      return undefined;
+    }
+  }
 
   async listUsers() {
     console.log(await prisma.user.findMany());
