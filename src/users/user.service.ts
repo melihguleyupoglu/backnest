@@ -30,13 +30,13 @@ export class UserService {
     }
   }
 
-  async hashPassword(password: string): Promise<string> {
+  async hashPassword(password: string): Promise<string | undefined> {
     try {
       const salt = await bcrypt.genSalt(10);
       return await bcrypt.hash(password, salt);
     } catch (err) {
       console.error(err);
-      return '';
+      return undefined;
     }
   }
 
