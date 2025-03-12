@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   InternalServerErrorException,
@@ -14,7 +13,10 @@ const prisma = new PrismaClient();
 @Injectable()
 export class UserService {
   async createUser(user: CreateUserDto): Promise<string | undefined> {
-    user.password = await this.hashPassword(user.password);
+    const hashedPassword = await this.hashPassword(user.password);
+    if (hashedPassword) {
+      user.password = hashedPassword;
+    }
     try {
       const newUser = await prisma.user.create({
         data: {
@@ -80,7 +82,7 @@ export class UserService {
     }
   }
 
-  async listUsers() {
-    console.log(await prisma.user.findMany());
+  async listUsers(): Promise<object> {
+    return await prisma.user.findMany();
   }
 }
