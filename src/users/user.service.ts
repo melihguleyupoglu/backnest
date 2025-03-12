@@ -83,6 +83,11 @@ export class UserService {
   }
 
   async listUsers(): Promise<object> {
-    return await prisma.user.findMany();
+    try {
+      return await prisma.user.findMany();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to fetch users:');
+    }
   }
 }
