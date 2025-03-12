@@ -4,6 +4,8 @@ import { UserController } from './users/user.controller';
 import { UserService } from './users/user.service';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -11,7 +13,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
     }),
   ],
-  controllers: [AppController, UserController],
-  providers: [AppService, UserService],
+  controllers: [AppController, UserController, AuthController],
+  providers: [AppService, UserService, AuthService],
 })
 export class AppModule {}
