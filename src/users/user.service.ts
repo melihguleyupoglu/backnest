@@ -13,15 +13,21 @@ const prisma = new PrismaClient();
 
 @Injectable()
 export class UserService {
-  async createUser(user: CreateUserDto) {
+  async createUser(user: CreateUserDto): Promise<string | undefined> {
     user.password = await this.hashPassword(user.password);
-    const newUser = await prisma.user.create({
-      data: {
-        email: user.email,
-        password: user.password,
-        name: user.name,
-      },
-    });
+    try {
+      const newUser = await prisma.user.create({
+        data: {
+          email: user.email,
+          password: user.password,
+          name: user.name,
+        },
+      });
+      return newUser.email;
+    } catch (err) {
+      console.error(err);
+      return undefined;
+    }
   }
 
   async hashPassword(password: string): Promise<string> {
