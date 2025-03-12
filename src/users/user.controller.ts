@@ -7,6 +7,7 @@ import {
   Param,
   NotFoundException,
   Put,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from 'src/dto/createUserDto';
@@ -16,8 +17,15 @@ import { UpdateUserDto } from 'src/dto/updateUserDto';
 export class UserController {
   constructor(private userService: UserService) {}
   @Post('/register')
-  async handleUserCreation(@Body() user: CreateUserDto): Promise<void> {
-    await this.userService.createUser(user);
+  async handleUserCreation(@Body() user: CreateUserDto): Promise<object> {
+    const createUser = await this.userService.createUser(user);
+    if (!createUser) {
+      throw new InternalServerErrorException('Failed to create user');
+    }
+    return {
+      message: `${createUser} created successfully`,
+      timestamp: new Date().toISOString(),
+    };
   }
   @Get('/list')
   async handleUserListing(): Promise<object> {
