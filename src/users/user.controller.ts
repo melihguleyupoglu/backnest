@@ -47,6 +47,9 @@ export class UserController {
     @Param() params: { email: string },
     @Body() user: UpdateUserDto,
   ): Promise<object> {
+    if (user.password) {
+      user.password = await this.userService.hashPassword(user.password);
+    }
     const updateUser = await this.userService.updateUser(params.email, user);
     if (!updateUser) {
       throw new NotFoundException('User not found');
