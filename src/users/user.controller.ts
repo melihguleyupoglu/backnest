@@ -20,8 +20,8 @@ export class UserController {
     await this.userService.createUser(user);
   }
   @Get('/list')
-  async handleUserListing() {
-    console.log(await this.userService.listUsers());
+  async handleUserListing(): Promise<object> {
+    return await this.userService.listUsers();
   }
   @Delete('/delete/:email')
   async handleUserRemoval(@Param() params: { email: string }): Promise<object> {
