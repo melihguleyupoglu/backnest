@@ -4,7 +4,6 @@ import {
   Get,
   Post,
   Delete,
-  ValidationPipe,
   Param,
   NotFoundException,
   Put,
@@ -17,9 +16,7 @@ import { UpdateUserDto } from 'src/dto/updateUserDto';
 export class UserController {
   constructor(private userService: UserService) {}
   @Post('/register')
-  async handleUserCreation(
-    @Body(new ValidationPipe({ whitelist: true })) user: CreateUserDto,
-  ): Promise<void> {
+  async handleUserCreation(@Body() user: CreateUserDto): Promise<void> {
     await this.userService.createUser(user);
   }
   @Get('/list')
@@ -40,7 +37,7 @@ export class UserController {
   @Put('/update/:email')
   async handleUserUpdate(
     @Param() params: { email: string },
-    @Body(new ValidationPipe()) user: UpdateUserDto,
+    @Body() user: UpdateUserDto,
   ): Promise<object> {
     const updateUser = await this.userService.updateUser(params.email, user);
     if (!updateUser) {
