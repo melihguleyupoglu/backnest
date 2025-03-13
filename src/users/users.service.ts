@@ -107,4 +107,20 @@ export class UsersService {
       return undefined;
     }
   }
+
+  async getUserId(email: string): Promise<number | undefined> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      });
+      if (user) {
+        return user['id'];
+      }
+    } catch (err) {
+      console.error(err);
+      return undefined;
+    }
+  }
 }

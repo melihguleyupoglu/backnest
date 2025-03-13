@@ -22,9 +22,16 @@ export class AuthService {
     }
   }
 
-  async generateAccessToken(userId: string): Promise<string | undefined> {
+  // async login(user: LoginUserDto): Promise<string | undefined> {
+  //   const payload = { email: user.email, id: user.id };
+  // }
+
+  async generateAccessToken(
+    userId: string,
+    email: string,
+  ): Promise<string | undefined> {
     try {
-      return this.jwtService.signAsync({ userId }, { expiresIn: '15m' });
+      return this.jwtService.signAsync({ userId, email }, { expiresIn: '15m' });
     } catch (err) {
       console.error(err);
       return undefined;
