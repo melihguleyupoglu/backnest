@@ -6,8 +6,11 @@ import { LoginUserDto } from 'src/users/dto/loginUserDto';
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Post('/login')
-  async handleLogin(@Body() user: LoginUserDto) {
-    const isAuthenticated = await this.authService.isAuthenticated(user);
-    console.log(isAuthenticated);
+  async handleLogin(@Body() user: LoginUserDto): Promise<object | undefined> {
+    const isValidated = await this.authService.isValidated(user);
+    if (isValidated) {
+      return await this.authService.login(user);
+    }
+    return undefined;
   }
 }

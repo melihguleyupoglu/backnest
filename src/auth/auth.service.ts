@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoginUserDto } from 'src/users/dto/loginUserDto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -10,21 +10,33 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
-  async isAuthenticated(user: LoginUserDto): Promise<boolean | void> {
-    try {
-      const dbUser = await this.usersService.findUser(user.email);
+  async isValidated(user: LoginUserDto): Promise<boolean | void> {
+    const dbUser = await this.usersService.findUser(user.email);
 
-      if (dbUser) {
-        return bcrypt.compare(user.password, dbUser.password);
-      }
-    } catch (err) {
-      console.error(err);
+    if (!dbUser) {
+      throw new BadRequestException('User not found');
     }
+    const isMatch: boolean = await bcrypt.compare(
+      user.password,
+      dbUser.password,
+    );
+    if (!isMatch) {
+      throw new BadRequestException('Password does not match');
+    }
+    return true;
   }
 
-  // async login(user: LoginUserDto): Promise<string | undefined> {
-  //   const payload = { email: user.email, id: user.id };
-  // }
+  async login(user: LoginUserDto): Promise<object> {
+    const payload = {
+      email: user.email,
+      id: await this.usersService.getUserId(user.email),
+    };
+    return {
+      access_token: await this.jwtService.signAsync(payload, {
+        expiresIn: '15m',
+      }),
+    };
+  }
 
   async generateAccessToken(
     userId: string,
