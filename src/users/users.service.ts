@@ -7,6 +7,7 @@ import { CreateUserDto } from 'src/users/dto/createUserDto';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from 'src/users/dto/updateUserDto';
+import { LoginUserDto } from './dto/loginUserDto';
 
 const prisma = new PrismaClient();
 
@@ -88,6 +89,22 @@ export class UsersService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       throw new InternalServerErrorException('Failed to fetch users:');
+    }
+  }
+
+  async findUser(email: string): Promise<LoginUserDto | undefined> {
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      });
+      if (dbUser) {
+        return dbUser;
+      }
+    } catch (err) {
+      console.error(err);
+      return undefined;
     }
   }
 }
