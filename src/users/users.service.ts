@@ -3,15 +3,15 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from 'src/dto/createUserDto';
+import { CreateUserDto } from 'src/users/dto/createUserDto';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { UpdateUserDto } from 'src/dto/updateUserDto';
+import { UpdateUserDto } from 'src/users/dto/updateUserDto';
 
 const prisma = new PrismaClient();
 
 @Injectable()
-export class UserService {
+export class UsersService {
   async createUser(user: CreateUserDto): Promise<string | undefined> {
     const hashedPassword = await this.hashPassword(user.password);
     if (hashedPassword) {

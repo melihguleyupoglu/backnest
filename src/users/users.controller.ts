@@ -9,16 +9,16 @@ import {
   Put,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from 'src/dto/createUserDto';
-import { UpdateUserDto } from 'src/dto/updateUserDto';
+import { UsersService } from './users.service';
+import { CreateUserDto } from 'src/users/dto/createUserDto';
+import { UpdateUserDto } from 'src/users/dto/updateUserDto';
 
 @Controller('/users')
-export class UserController {
-  constructor(private userService: UserService) {}
+export class UsersController {
+  constructor(private usersService: UsersService) {}
   @Post('/register')
   async handleUserCreation(@Body() user: CreateUserDto): Promise<object> {
-    const createUser = await this.userService.createUser(user);
+    const createUser = await this.usersService.createUser(user);
     if (!createUser) {
       throw new InternalServerErrorException('Failed to create user');
     }
@@ -29,11 +29,11 @@ export class UserController {
   }
   @Get('/list')
   async handleUserListing(): Promise<object> {
-    return await this.userService.listUsers();
+    return await this.usersService.listUsers();
   }
   @Delete('/delete/:email')
   async handleUserRemoval(@Param() params: { email: string }): Promise<object> {
-    const deletedUser = await this.userService.removeUser(params.email);
+    const deletedUser = await this.usersService.removeUser(params.email);
     if (!deletedUser) {
       throw new NotFoundException('User not found');
     }
@@ -48,9 +48,9 @@ export class UserController {
     @Body() user: UpdateUserDto,
   ): Promise<object> {
     if (user.password) {
-      user.password = await this.userService.hashPassword(user.password);
+      user.password = await this.usersService.hashPassword(user.password);
     }
-    const updateUser = await this.userService.updateUser(params.email, user);
+    const updateUser = await this.usersService.updateUser(params.email, user);
     if (!updateUser) {
       throw new NotFoundException('User not found');
     }
