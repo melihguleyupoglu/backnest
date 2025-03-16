@@ -123,4 +123,16 @@ export class UsersService {
       return undefined;
     }
   }
+
+  async storeRefreshToken(email: string, refreshToken: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const user = await prisma.user.update({
+      where: {
+        email: email,
+      },
+      data: {
+        refresh_token: refreshToken,
+      },
+    });
+  }
 }
