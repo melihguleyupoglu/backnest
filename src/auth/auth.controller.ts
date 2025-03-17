@@ -11,7 +11,7 @@ export class AuthController {
   ) {}
   @Post('/login')
   async handleLogin(@Body() user: LoginUserDto): Promise<object | undefined> {
-    const isValidated = await this.authService.isValidated(user);
+    const isValidated = await this.authService.validateUser(user);
     if (isValidated) {
       const { access_token, refresh_token } =
         await this.authService.login(user);
@@ -20,8 +20,8 @@ export class AuthController {
     }
     return undefined;
   }
-  @Post('/refresh')
-  async handleRefreshToken(
-    @Body() refreshToken: string,
-  ): Promise<object | undefined> {}
+  // @Post('/refresh')
+  // async handleRefreshToken(
+  //   @Body() refreshToken: string,
+  // ): Promise<object | undefined> {}
 }

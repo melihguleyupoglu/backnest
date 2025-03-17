@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { LoginResponseDto } from '../users/dto/loginResponseDto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -11,7 +12,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
-  async isValidated(user: LoginUserDto): Promise<boolean | void> {
+  async validateUser(user: LoginUserDto): Promise<User | void> {
     const dbUser = await this.usersService.findUser(user.email);
 
     if (!dbUser) {
@@ -24,7 +25,7 @@ export class AuthService {
     if (!isMatch) {
       throw new BadRequestException('Password does not match');
     }
-    return true;
+    return dbUser;
   }
 
   async login(user: LoginUserDto): Promise<LoginResponseDto> {

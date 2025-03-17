@@ -4,11 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/createUserDto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from 'src/users/dto/updateUserDto';
-import { LoginUserDto } from './dto/loginUserDto';
-
 const prisma = new PrismaClient();
 
 @Injectable()
@@ -92,7 +90,7 @@ export class UsersService {
     }
   }
 
-  async findUser(email: string): Promise<LoginUserDto | undefined> {
+  async findUser(email: string): Promise<User | undefined> {
     try {
       const dbUser = await prisma.user.findUnique({
         where: {
