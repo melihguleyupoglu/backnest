@@ -1,10 +1,12 @@
-import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import { Get, Post, UseGuards, Request, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../auth.service';
 import { LoginUserDto } from 'src/users/dto/loginUserDto';
-@Controller()
-export class JwtAuthGuard {
-  constructor(private authService: AuthService) {}
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private authService: AuthService) {
+    super();
+  }
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
