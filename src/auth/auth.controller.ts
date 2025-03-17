@@ -20,8 +20,8 @@ export class AuthController {
     }
     return undefined;
   }
-  // @Post('/refresh-token')
-  // async handleRefreshToken(
-  //   @Body() refreshToken: string,
-  // ): Promise<object | undefined> {}
+  @Post('/refresh')
+  async handleRefreshToken(
+    @Body() refreshToken: string,
+  ): Promise<object | undefined> {}
 }
