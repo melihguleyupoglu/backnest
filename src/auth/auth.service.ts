@@ -51,4 +51,25 @@ export class AuthService {
       return undefined;
     }
   }
+
+  async generateAccessToken(payload: {
+    email: string;
+    id: string;
+  }): Promise<string> {
+    return this.jwtService.signAsync(payload, {
+      expiresIn: '15m',
+    });
+  }
+
+  async validateRefreshToken(refreshToken: string): Promise<object> {
+    return await this.jwtService.verifyAsync(refreshToken);
+  }
+
+  async compareRefreshToken(
+    email: string,
+    refreshToken: string,
+  ): Promise<boolean> {
+    const dbRefreshToken = await this.usersService.getRefreshToken(email);
+    return dbRefreshToken === refreshToken;
+  }
 }

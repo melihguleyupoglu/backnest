@@ -30,8 +30,26 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return req;
   }
-  // @Post('/refresh')
-  // async handleRefreshToken(
-  //   @Body() refreshToken: string,
-  // ): Promise<object | undefined> {}
+
+  @Post('/refresh')
+  async handleRefreshToken(
+    @Body() user: { refreshToken: string; email: string },
+  ): Promise<string | undefined> {
+    if (
+      (await this.authService.validateRefreshToken(user.refreshToken)) &&
+      (await this.authService.compareRefreshToken(
+        user.email,
+        user.refreshToken,
+      ))
+    ) {
+      const userId = await this.usersService.getUserId(user.email);
+      if (userId) {
+        return await this.authService.generateAccessToken({
+          email: user.email,
+          id: userId.toString(),
+        });
+      }
+      return undefined;
+    }
+  }
 }

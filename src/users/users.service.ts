@@ -138,4 +138,16 @@ export class UsersService {
       },
     });
   }
+
+  async getRefreshToken(email: string): Promise<string | null> {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return user.refresh_token;
+  }
 }
