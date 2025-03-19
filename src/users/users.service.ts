@@ -107,6 +107,10 @@ export class UsersService {
   }
 
   async getUserId(email: string): Promise<number | undefined> {
+    if (!email) {
+      console.error('Email is required but got an empty value');
+      return undefined;
+    }
     try {
       const user = await prisma.user.findUnique({
         where: {
@@ -114,8 +118,9 @@ export class UsersService {
         },
       });
       if (user) {
-        return user['id'];
+        return user.id;
       }
+      return undefined;
     } catch (err) {
       console.error(err);
       return undefined;
