@@ -1,7 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Controller, Post, UseGuards, Get, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from 'src/users/dto/loginUserDto';
 import { UsersService } from 'src/users/users.service';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('/auth')
 export class AuthController {
@@ -9,16 +11,17 @@ export class AuthController {
     private authService: AuthService,
     private readonly usersService: UsersService,
   ) {}
-  @Post('/login')
-  async handleLogin(@Body() user: LoginUserDto): Promise<object | undefined> {
-    const isValidated = await this.authService.validateUser(user);
-    if (isValidated) {
-      const { access_token, refresh_token } =
-        await this.authService.login(user);
-      await this.usersService.storeRefreshToken(user.email, refresh_token);
-      return { access_token, refresh_token };
-    }
-    return undefined;
+  @UseGuards(AuthGuard('local'))
+  @Post('login')
+  async login(@Request() req: LoginUserDto) {
+    return this.authService.login(req);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getUserInfo(@Request() req) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return req;
   }
   // @Post('/refresh')
   // async handleRefreshToken(
