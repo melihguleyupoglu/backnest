@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { LoginUserDto } from 'src/users/dto/loginUserDto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -29,23 +33,36 @@ export class AuthService {
   }
 
   async login(user: LoginUserDto): Promise<LoginResponseDto> {
+    const id = await this.usersService.getUserId(user.email);
+    if (!id) {
+      throw NotFoundException;
+    }
     const payload = {
       email: user.email,
-      id: await this.usersService.getUserId(user.email),
+      id: id,
     };
+    const refreshToken = await this.generateRefreshToken(id);
+    if (!refreshToken || !id) {
+      throw NotFoundException;
+    }
+    await this.usersService.storeRefreshToken(user.email, refreshToken);
     return {
       access_token: await this.jwtService.signAsync(payload, {
         expiresIn: '15m',
       }),
-      refresh_token: await this.jwtService.signAsync(payload, {
-        expiresIn: '7d',
-      }),
+      refresh_token: refreshToken,
     };
   }
 
-  async generateRefreshToken(userId: string): Promise<string | undefined> {
+  async generateRefreshToken(userId: number): Promise<string | undefined> {
     try {
-      return this.jwtService.signAsync({ userId }, { expiresIn: '15m' });
+      const salt = await bcrypt.genSalt();
+      const refreshToken = await this.jwtService.signAsync(
+        { userId },
+        { expiresIn: '15m' },
+      );
+      const hash = bcrypt.hash(refreshToken, salt);
+      return hash;
     } catch (err) {
       console.error(err);
       return undefined;
@@ -68,8 +85,10 @@ export class AuthService {
   async compareRefreshToken(
     email: string,
     refreshToken: string,
-  ): Promise<boolean> {
+  ): Promise<boolean | void> {
     const dbRefreshToken = await this.usersService.getRefreshToken(email);
-    return dbRefreshToken === refreshToken;
+    if (dbRefreshToken) {
+      return bcrypt.compare(refreshToken, dbRefreshToken);
+    }
   }
 }
