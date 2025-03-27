@@ -127,8 +127,7 @@ export class UsersService {
     }
   }
 
-  async storeRefreshToken(email: string, refreshToken: string): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async storeRefreshToken(email: string, refreshToken: string): Promise<User> {
     const user = await prisma.user.update({
       where: {
         email: email,
@@ -137,6 +136,7 @@ export class UsersService {
         refresh_token: refreshToken,
       },
     });
+    return user;
   }
 
   async getRefreshToken(email: string): Promise<string | null> {
@@ -149,5 +149,18 @@ export class UsersService {
       throw new NotFoundException();
     }
     return user.refresh_token;
+  }
+
+  async findUserById(userId: number): Promise<User> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }

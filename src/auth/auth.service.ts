@@ -7,8 +7,8 @@ import { LoginUserDto } from 'src/users/dto/loginUserDto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
-import { LoginResponseDto } from '../users/dto/loginResponseDto';
 import { User } from '@prisma/client';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -32,8 +32,9 @@ export class AuthService {
     return dbUser;
   }
 
-  async login(user: LoginUserDto): Promise<LoginResponseDto> {
+  async login(user: LoginUserDto, res: Response): Promise<void> {
     const id = await this.usersService.getUserId(user.email);
+
     if (!id) {
       throw NotFoundException;
     }
@@ -41,31 +42,47 @@ export class AuthService {
       email: user.email,
       id: id,
     };
-    const refreshToken = await this.generateRefreshToken(id);
-    if (!refreshToken || !id) {
+    const { hashed, regular } = await this.generateRefreshToken(id);
+    if (!regular || !id) {
       throw NotFoundException;
     }
-    await this.usersService.storeRefreshToken(user.email, refreshToken);
-    return {
+
+    res.cookie('refresh_token', regular, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+    });
+
+    const storeUser = await this.usersService.storeRefreshToken(
+      user.email,
+      hashed,
+    );
+    if (!storeUser) {
+      throw new NotFoundException('Some error occured');
+    }
+
+    res.status(200).json({
       access_token: await this.jwtService.signAsync(payload, {
         expiresIn: '15m',
       }),
-      refresh_token: refreshToken,
-    };
+    });
   }
 
-  async generateRefreshToken(userId: number): Promise<string | undefined> {
+  async generateRefreshToken(
+    userId: number,
+  ): Promise<{ hashed: string; regular: string }> {
     try {
       const salt = await bcrypt.genSalt();
       const refreshToken = await this.jwtService.signAsync(
         { userId },
         { expiresIn: '15m' },
       );
-      const hash = bcrypt.hash(refreshToken, salt);
-      return hash;
+      const hash = await bcrypt.hash(refreshToken, salt);
+      return { hashed: hash, regular: refreshToken };
     } catch (err) {
       console.error(err);
-      return undefined;
+      throw new BadRequestException();
     }
   }
 
