@@ -54,10 +54,7 @@ export class AuthService {
       path: '/auth/refresh',
     });
 
-    const storeUser = await this.usersService.storeRefreshToken(
-      user.email,
-      hashed,
-    );
+    const storeUser = await this.usersService.storeRefreshToken(id, hashed);
     if (!storeUser) {
       throw new NotFoundException('Some error occured');
     }
@@ -97,15 +94,5 @@ export class AuthService {
 
   async validateRefreshToken(refreshToken: string): Promise<object> {
     return await this.jwtService.verifyAsync(refreshToken);
-  }
-
-  async compareRefreshToken(
-    email: string,
-    refreshToken: string,
-  ): Promise<boolean | void> {
-    const dbRefreshToken = await this.usersService.getRefreshToken(email);
-    if (dbRefreshToken) {
-      return bcrypt.compare(refreshToken, dbRefreshToken);
-    }
   }
 }

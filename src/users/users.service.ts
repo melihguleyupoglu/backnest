@@ -127,10 +127,10 @@ export class UsersService {
     }
   }
 
-  async storeRefreshToken(email: string, refreshToken: string): Promise<User> {
+  async storeRefreshToken(userId: number, refreshToken: string): Promise<User> {
     const user = await prisma.user.update({
       where: {
-        email: email,
+        id: userId,
       },
       data: {
         refresh_token: refreshToken,
@@ -139,10 +139,10 @@ export class UsersService {
     return user;
   }
 
-  async getRefreshToken(email: string): Promise<string | null> {
+  async getRefreshTokenByUserId(userId: number): Promise<string | null> {
     const user = await prisma.user.findUnique({
       where: {
-        email: email,
+        id: userId,
       },
     });
     if (!user) {
