@@ -67,4 +67,22 @@ export class AuthController {
       id: user.id.toString(),
     });
   }
+  @Post('/logout')
+  async handleLogout(@Req() req: ExpressRequest, @Res() res: Response) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const refreshToken = req.cookies?.refresh_token;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+    const decoded = (await this.authService.validateRefreshToken(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      refreshToken,
+    )) as { userId: string };
+    if (!decoded?.userId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    await this.usersService.removeRefreshToken(Number(decoded.userId));
+    res.clearCookie('refresh_token');
+    return res.sendStatus(200);
+  }
 }
