@@ -16,6 +16,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Request as ExpressRequest } from 'express';
+import RefreshResponseInterface from './interfaces/refreshResponseInterface';
 
 @Controller('/auth')
 export class AuthController {
@@ -43,29 +44,26 @@ export class AuthController {
   @Post('/refresh')
   async handleRefreshToken(
     @Req() req: ExpressRequest,
-  ): Promise<string | undefined> {
+    @Res() res: Response,
+  ): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const refreshToken = req.cookies?.refresh_token;
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not found');
-    }
-    const decoded = (await this.authService.validateRefreshToken(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      refreshToken,
-    )) as { userId: string };
+    const refreshToken: string = req.cookies?.refresh_token;
+    const response: RefreshResponseInterface =
+      await this.authService.refreshTokens(refreshToken);
+    const updatedAccessToken = response.accessToken;
+    const updatedRefreshToken = response.refreshToken;
 
-    if (!decoded?.userId) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-    const user = await this.usersService.findUserById(Number(decoded.userId));
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    return this.authService.generateAccessToken({
-      email: user.email,
-      id: user.id.toString(),
+    res.cookie('refresh_token', updatedRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
     });
+    res.cookie('access_token', updatedAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    });
+    res.status(200).json({ message: 'Token refreshed successfully' });
   }
   @Post('/logout')
   async handleLogout(@Req() req: ExpressRequest, @Res() res: Response) {

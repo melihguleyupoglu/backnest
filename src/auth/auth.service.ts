@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginUserDto } from 'src/users/dto/loginUserDto';
 import * as bcrypt from 'bcrypt';
@@ -9,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { User } from '@prisma/client';
 import { Response } from 'express';
+import RefreshResponseInterface from './interfaces/refreshResponseInterface';
 
 @Injectable()
 export class AuthService {
@@ -85,7 +87,7 @@ export class AuthService {
 
   async generateAccessToken(payload: {
     email: string;
-    id: string;
+    id: number;
   }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       expiresIn: '15m',
@@ -94,5 +96,34 @@ export class AuthService {
 
   async validateRefreshToken(refreshToken: string): Promise<object> {
     return await this.jwtService.verifyAsync(refreshToken);
+  }
+
+  async refreshTokens(refreshToken: string): Promise<RefreshResponseInterface> {
+    const decoded = (await this.validateRefreshToken(refreshToken)) as {
+      userId: string;
+    };
+
+    if (!decoded.userId) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const user = await this.usersService.findUserById(Number(decoded.userId));
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const updatedRefreshToken = await this.generateRefreshToken(user.id);
+    const updatedAccessToken = await this.generateAccessToken({
+      email: user.email,
+      id: user.id,
+    });
+
+    await this.usersService.storeRefreshToken(
+      user.id,
+      updatedRefreshToken.hashed,
+    );
+    return {
+      accessToken: updatedAccessToken,
+      refreshToken: updatedRefreshToken.regular,
+    };
   }
 }
