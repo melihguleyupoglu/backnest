@@ -9,8 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { User } from '@prisma/client';
-import { Response } from 'express';
 import RefreshResponseInterface from './interfaces/refreshResponseInterface';
+import LoginResponse from './interfaces/loginResponse';
 
 @Injectable()
 export class AuthService {
@@ -34,11 +34,11 @@ export class AuthService {
     return dbUser;
   }
 
-  async login(user: LoginUserDto, res: Response): Promise<void> {
+  async login(user: LoginUserDto): Promise<LoginResponse> {
     const id = await this.usersService.getUserId(user.email);
 
     if (!id) {
-      throw NotFoundException;
+      throw new NotFoundException('User not found');
     }
     const payload = {
       email: user.email,
@@ -46,26 +46,20 @@ export class AuthService {
     };
     const { hashed, regular } = await this.generateRefreshToken(id);
     if (!regular || !id) {
-      throw NotFoundException;
+      throw new NotFoundException('Some error occurred');
     }
-
-    res.cookie('refresh_token', regular, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/auth/refresh',
-    });
 
     const storeUser = await this.usersService.storeRefreshToken(id, hashed);
     if (!storeUser) {
       throw new NotFoundException('Some error occured');
     }
 
-    res.status(200).json({
-      access_token: await this.jwtService.signAsync(payload, {
+    return {
+      accessToken: await this.jwtService.signAsync(payload, {
         expiresIn: '15m',
       }),
-    });
+      refreshToken: regular,
+    };
   }
 
   async generateRefreshToken(

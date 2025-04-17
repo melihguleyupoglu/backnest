@@ -17,6 +17,7 @@ import { Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Request as ExpressRequest } from 'express';
 import RefreshResponseInterface from './interfaces/refreshResponseInterface';
+import LoginResponse from './interfaces/loginResponse';
 
 @Controller('/auth')
 export class AuthController {
@@ -31,7 +32,22 @@ export class AuthController {
     @Body() body: LoginUserDto,
     @Res() res: Response,
   ) {
-    return this.authService.login(body, res);
+    const result: LoginResponse = await this.authService.login(body);
+    const { refreshToken, accessToken } = result;
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+    });
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    });
+    // Send access token in response
+    res.status(200).send({ message: 'Login successful.' });
   }
 
   @UseGuards(JwtAuthGuard)
