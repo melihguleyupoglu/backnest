@@ -34,7 +34,11 @@ export class AuthService {
     return dbUser;
   }
 
-  async login(user: LoginUserDto): Promise<LoginResponse> {
+  async login(
+    user: LoginUserDto,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<LoginResponse> {
     const id = await this.usersService.getUserId(user.email);
 
     if (!id) {
@@ -49,7 +53,13 @@ export class AuthService {
       throw new NotFoundException('Some error occurred');
     }
 
-    const storeUser = await this.usersService.storeRefreshToken(id, hashed);
+    const storeUser = await this.usersService.storeRefreshToken(
+      id,
+      hashed,
+      userAgent,
+      ipAddress,
+    );
+
     if (!storeUser) {
       throw new NotFoundException('Some error occured');
     }
@@ -92,7 +102,11 @@ export class AuthService {
     return await this.jwtService.verifyAsync(refreshToken);
   }
 
-  async refreshTokens(refreshToken: string): Promise<RefreshResponseInterface> {
+  async refreshTokens(
+    refreshToken: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<RefreshResponseInterface> {
     const decoded = (await this.validateRefreshToken(refreshToken)) as {
       userId: string;
     };
@@ -114,6 +128,8 @@ export class AuthService {
     await this.usersService.storeRefreshToken(
       user.id,
       updatedRefreshToken.hashed,
+      userAgent,
+      ipAddress,
     );
     return {
       accessToken: updatedAccessToken,

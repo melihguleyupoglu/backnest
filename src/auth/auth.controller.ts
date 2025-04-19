@@ -28,11 +28,20 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async handleLogin(
-    @Request() req,
+    @Req() req: ExpressRequest,
     @Body() body: LoginUserDto,
     @Res() res: Response,
   ) {
-    const result: LoginResponse = await this.authService.login(body);
+    // Tarayıcı bilgisini al
+    const userAgent = req.headers['user-agent'] || undefined;
+    // IP adresini al
+    const ipAddress = req.ip || req.connection?.remoteAddress || undefined;
+
+    const result: LoginResponse = await this.authService.login(
+      body,
+      userAgent,
+      ipAddress,
+    );
     const { refreshToken, accessToken } = result;
 
     res.cookie('refresh_token', refreshToken, {
@@ -62,10 +71,16 @@ export class AuthController {
     @Req() req: ExpressRequest,
     @Res() res: Response,
   ): Promise<void> {
+    // Refresh token'ı al
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const refreshToken: string = req.cookies?.refresh_token;
+    // Tarayıcı bilgisini al
+    const userAgent = req.headers['user-agent'] || undefined;
+    // IP adresini al
+    const ipAddress = req.ip || req.connection?.remoteAddress || undefined;
+
     const response: RefreshResponseInterface =
-      await this.authService.refreshTokens(refreshToken);
+      await this.authService.refreshTokens(refreshToken, userAgent, ipAddress);
     const updatedAccessToken = response.accessToken;
     const updatedRefreshToken = response.refreshToken;
 
