@@ -11,7 +11,7 @@ import {
   User,
   UserSession as PrismaUserSession,
 } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from 'src/users/dto/updateUserDto';
 import UserSession from './entities/userSession.entity';
 const prisma = new PrismaClient();
@@ -57,7 +57,6 @@ export class UsersService {
 
   async removeUser(email: string): Promise<string | undefined> {
     try {
-      // Önce kullanıcıyı bulalım
       const user = await prisma.user.findUnique({
         where: { email },
         include: { sessions: true },
@@ -67,14 +66,12 @@ export class UsersService {
         throw new NotFoundException(`User with ${email} not found.`);
       }
 
-      // İlişkili tüm oturumları silelim
       if (user.sessions.length > 0) {
         await prisma.userSession.deleteMany({
           where: { userId: user.id },
         });
       }
 
-      // Şimdi kullanıcıyı silebiliriz
       const deleteUser = await prisma.user.delete({
         where: {
           email: email,
@@ -168,7 +165,6 @@ export class UsersService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<UserSession> {
-    // Önce kullanıcının var olduğunu kontrol edelim
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
       include: { sessions: true },
@@ -181,13 +177,11 @@ export class UsersService {
     let session: PrismaUserSession;
 
     if (userAgent) {
-      // Aynı userAgent'a sahip bir oturum var mı kontrol edelim
       const existingSession = existingUser.sessions.find(
         (session) => session.userAgent === userAgent,
       );
 
       if (existingSession) {
-        // Aynı cihazdan login olduysa, mevcut oturumu güncelle
         session = await prisma.userSession.update({
           where: { id: existingSession.id },
           data: {
@@ -197,7 +191,6 @@ export class UsersService {
           },
         });
       } else {
-        // Yeni bir cihazdan login olduysa, yeni bir oturum oluştur
         session = await prisma.userSession.create({
           data: {
             refreshToken,
@@ -208,7 +201,6 @@ export class UsersService {
         });
       }
     } else {
-      // UserAgent bilgisi yoksa, sadece ilk oturumu güncelle veya yeni bir oturum oluştur
       if (existingUser.sessions.length > 0) {
         session = await prisma.userSession.update({
           where: { id: existingUser.sessions[0].id },
@@ -224,7 +216,6 @@ export class UsersService {
       }
     }
 
-    // Prisma UserSession tipinden kendi UserSession tipimize dönüştürelim
     const userSession: UserSession = {
       id: session.id,
       userId: session.userId,
@@ -249,7 +240,6 @@ export class UsersService {
       throw new NotFoundException('User session not found');
     }
 
-    // sessions array içerisindeki ilk elemanın refreshToken değerini dönüyoruz
     return user.sessions[0].refreshToken;
   }
 
@@ -281,7 +271,6 @@ export class UsersService {
       data: { refreshToken: '' },
     });
 
-    // Prisma UserSession tipinden kendi UserSession tipimize dönüştürelim
     const userSession: UserSession = {
       id: session.id,
       userId: session.userId,
